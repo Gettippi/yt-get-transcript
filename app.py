@@ -25,7 +25,7 @@ def get_transcript():
             )
         )
 
-        transcript = yt_transcript.get_transcript(video_id)
+        transcript = yt_transcript.fetch(video_id)
         return jsonify(transcript)
     except Exception as e:
         return jsonify({'error': str(e)}), 500
