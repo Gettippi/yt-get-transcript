@@ -1,3 +1,3 @@
-Flask==2.0.3
-youtube-transcript-api
+Flask
+yt-dlp
 werkzeug==2.3

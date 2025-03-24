@@ -1,34 +1,34 @@
 from flask import Flask, request, jsonify
-from youtube_transcript_api import YouTubeTranscriptApi
-from youtube_transcript_api.proxies import GenericProxyConfig
-import requests
+import yt_dlp
 
 app = Flask(__name__)
 
-@app.route('/transcript', methods=['GET'])
-def get_transcript():
-    video_id = request.args.get('video_id')
-    proxy = request.args.get('proxy')  # Get the proxy from the request
+@app.route('/get_captions', methods=['POST'])
+def get_captions():
+    data = request.json
+    video_url = data.get('video_url')
+    proxy = data.get('proxy', None)
 
-    if not video_id:
-        return jsonify({'error': 'video_id is required'}), 400
-
+    if not video_url:
+        return jsonify({"error": "video_url is required"}), 400
+    
     if not proxy:
-        return jsonify({'error': 'proxy is required'}), 400
+        return jsonify({"error": "proxy is required"}), 400
+
+    ydl_opts = {
+        'skip_download': True,
+        'writesubtitles': True,
+        'subtitlesformat': 'json',
+        'proxy': proxy,
+    }
 
     try:
-        # Use the custom session with youtube-transcript-api
-        yt_transcript = YouTubeTranscriptApi(
-            proxy_config=GenericProxyConfig(
-                http_url=f"http://{proxy}",
-                https_url=f"https://{proxy}",
-            )
-        )
-
-        transcript = yt_transcript.fetch(video_id)
-        return jsonify(transcript)
+        with yt_dlp.YoutubeDL(ydl_opts) as ydl:
+            result = ydl.extract_info(video_url, download=False)
+            subtitles = result.get('subtitles', {})
+            return jsonify(subtitles)
     except Exception as e:
-        return jsonify({'error': str(e)}), 500
+        return jsonify({"error": str(e)}), 500
 
 if __name__ == '__main__':
     app.run(host='0.0.0.0', port=5000)
