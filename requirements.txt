@@ -1,3 +1,4 @@
 Flask
 yt-dlp
 werkzeug==2.3
+requests
