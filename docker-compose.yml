@@ -1,0 +1,15 @@
+services:
+  flask-app:
+    build:
+      context: .  # Use the current directory as the build context
+      dockerfile: Dockerfile  # Specify the Dockerfile to use
+    # ports:
+    #   - "5000:5000"  # Map port 5000 on the host to port 5000 in the container
+    environment:
+      - FLASK_ENV=development  # Set the Flask environment to development
+    networks:
+      - nginx_bridge
+
+networks:
+  nginx_bridge:
+    external: true
