@@ -1,5 +1,6 @@
 from flask import Flask, request, jsonify
 from youtube_transcript_api import YouTubeTranscriptApi
+from youtube_transcript_api.proxies import GenericProxyConfig
 import requests
 
 app = Flask(__name__)
@@ -12,22 +13,19 @@ def get_transcript():
     if not video_id:
         return jsonify({'error': 'video_id is required'}), 400
 
-    # Prepare the proxy configuration
-    proxies = None
-    if proxy:
-        proxies = {
-            'http': proxy,
-            'https': proxy,
-        }
+    if not proxy:
+        return jsonify({'error': 'proxy is required'}), 400
 
     try:
-        # Create a custom session with the proxy
-        session = requests.Session()
-        if proxies:
-            session.proxies.update(proxies)
-
         # Use the custom session with youtube-transcript-api
-        transcript = YouTubeTranscriptApi.get_transcript(video_id, http_client=session)
+        yt_transcript = YouTubeTranscriptApi(
+            proxy_config=GenericProxyConfig(
+                http_url=f"http://{proxy}",
+                https_url=f"https://{proxy}",
+            )
+        )
+
+        transcript = yt_transcript.get_transcript(video_id)
         return jsonify(transcript)
     except Exception as e:
         return jsonify({'error': str(e)}), 500
