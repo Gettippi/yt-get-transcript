@@ -1,5 +1,6 @@
 from flask import Flask, request, jsonify
 import yt_dlp
+import os
 
 app = Flask(__name__)
 
@@ -19,14 +20,22 @@ def get_captions():
         'skip_download': True,
         'writesubtitles': True,
         'subtitlesformat': 'json',
+        'outtmpl': '/tmp/subtitles.json',
         'proxy': proxy,
     }
 
     try:
         with yt_dlp.YoutubeDL(ydl_opts) as ydl:
-            result = ydl.extract_info(video_url, download=False)
-            subtitles = result.get('subtitles', {})
-            return jsonify(subtitles)
+            # result = ydl.extract_info(video_url, download=False)
+            # subtitles = result.get('subtitles', {})
+            ydl.download([video_url])
+            if os.path.exists('/tmp/subtitles.json'):
+                with open('/tmp/subtitles.json', 'r') as f:
+                    subtitles = f.read()
+                os.remove('/tmp/subtitles.json')
+                return subtitles
+            else:
+                return jsonify({"error": "No subtitles found"}), 404
     except Exception as e:
         return jsonify({"error": str(e)}), 500
 
